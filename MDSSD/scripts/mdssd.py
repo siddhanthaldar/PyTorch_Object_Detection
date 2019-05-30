@@ -17,9 +17,8 @@ class MDSSD300(nn.Module):
 
     def __init__(self):
         super(MDSSD300, self).__init__()
-        self.vgg_pool = [4,9,16]
-
-        # model
+		
+		# model
         self.base = self.VGG16()
         self.norm4 = L2Norm(512, 20) # 38
 

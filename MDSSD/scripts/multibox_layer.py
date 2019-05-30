@@ -9,7 +9,7 @@ import torch.nn.functional as F
 
 
 class MultiBoxLayer(nn.Module):
-	num_classes = 21
+	num_classes = 13
 	# num_anchors = [4,6,6,6,4,4]
 	num_anchors = [6,6,4,4,4,4,4]
 	# in_planes = [512,1024,512,256,256,256]
@@ -20,9 +20,8 @@ class MultiBoxLayer(nn.Module):
 		self.loc_layers = nn.ModuleList()
 		self.conf_layers = nn.ModuleList()
 		for i in range(len(self.in_planes)):
-			print(i)
 			self.loc_layers.append(nn.Conv2d(self.in_planes[i], self.num_anchors[i]*4, kernel_size=3, padding=1))
-			self.conf_layers.append(nn.Conv2d(self.in_planes[i], self.num_anchors[i]*21, kernel_size=3, padding=1))
+			self.conf_layers.append(nn.Conv2d(self.in_planes[i], self.num_anchors[i]*13, kernel_size=3, padding=1))
 
 	def forward(self, xs):
 		'''
@@ -44,7 +43,7 @@ class MultiBoxLayer(nn.Module):
 
 			y_conf = self.conf_layers[i](x)
 			y_conf = y_conf.permute(0,2,3,1).contiguous()
-			y_conf = y_conf.view(N,-1,21)
+			y_conf = y_conf.view(N,-1,13)
 			y_confs.append(y_conf)
 
 		loc_preds = torch.cat(y_locs, 1)

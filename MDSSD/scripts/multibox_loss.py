@@ -9,7 +9,7 @@ import torch.nn.functional as F
 
 
 class MultiBoxLoss(nn.Module):
-    num_classes = 21
+    num_classes = 13
 
     def __init__(self):
         super(MultiBoxLoss, self).__init__()
@@ -66,11 +66,16 @@ class MultiBoxLoss(nn.Module):
         loss:
           (tensor) loss = SmoothL1Loss(loc_preds, loc_targets) + CrossEntropyLoss(conf_preds, conf_targets).
         '''
+
+        # loc_preds = loc_preds[:,:8732,:]
+        # conf_preds = conf_preds[:,:8732,:]
+
         batch_size, num_boxes, _ = loc_preds.size()
         pos = conf_targets > 0  # [N,8732], pos means the box matched.
+        # print(pos.size())
         num_matched_boxes = pos.data.float().sum()
         if num_matched_boxes == 0:
-            return torch.tensor([0], requires_grad=True)
+            return torch.tensor([0.], requires_grad=True)
         
         ################################################################
         # loc_loss = SmoothL1Loss(pos_loc_preds, pos_loc_targets)
@@ -85,6 +90,8 @@ class MultiBoxLoss(nn.Module):
         # conf_loss = CrossEntropyLoss(pos_conf_preds, pos_conf_targets)
         #           + CrossEntropyLoss(neg_conf_preds, neg_conf_targets)
         ################################################################
+        conf_preds = conf_preds.contiguous()
+        # print(conf_preds.size(), conf_targets.size())
         conf_loss = F.cross_entropy(conf_preds.view(-1,self.num_classes), \
                                             conf_targets.view(-1), reduce=False)  # [N*8732,]
         neg = self.hard_negative_mining(conf_loss, pos)    # [N,8732]

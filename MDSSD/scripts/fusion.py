@@ -48,7 +48,7 @@ class FusionBlock(nn.Module):
 
         size = h2.size()[3]
         diff_odd = h2.size()[-1] - h1.size()[-1]
-        h2 = h2[:,:,(diff_odd/2+diff_odd%2):(size-diff_odd/2),(diff_odd/2+diff_odd%2):(size-diff_odd/2)]
+        h2 = h2[:,:,(int(diff_odd/2)+diff_odd%2):(size-int(diff_odd/2)),(int(diff_odd/2)+diff_odd%2):(size-int(diff_odd/2))]
 
         # print(h1.size(), h2.size())
         h = F.relu(h1+h2)

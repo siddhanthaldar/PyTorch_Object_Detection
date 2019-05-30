@@ -8,10 +8,14 @@ class DataEncoder:
     def __init__(self):
         '''Compute default box sizes with scale and aspect transform.'''
         scale = 300.
-        steps = [s / scale for s in (8, 16, 32, 64, 100, 300)]
-        sizes = [s / scale for s in (30, 60, 111, 162, 213, 264, 315)]
-        aspect_ratios = ((2,), (2,3), (2,3), (2,3), (2,), (2,))
-        feature_map_sizes = (38, 19, 10, 5, 3, 1)
+        # steps = [s / scale for s in (8, 16, 32, 64, 100, 300)]
+        steps = [s / scale for s in (32, 64, 100, 300, 4, 8, 16)]
+        # sizes = [s / scale for s in (30, 60, 111, 162, 213, 264, 315)]
+        sizes_ssd = [s / scale for s in (111, 162, 213, 264, 315)]
+        sizes_fusion = [s / scale for s in (15, 30, 60, 111)]
+        aspect_ratios = ((2,3), (2,3), (2,), (2,), (2,), (2,), (2,))
+        # feature_map_sizes = (38, 19, 10, 5, 3, 1)
+        feature_map_sizes = (10, 5, 3, 1, 75, 38, 19)
         num_layers = len(feature_map_sizes)
 
         boxes = []
@@ -21,16 +25,40 @@ class DataEncoder:
                 cx = (w + 0.5)*steps[i]
                 cy = (h + 0.5)*steps[i]
 
-                s = sizes[i]
-                boxes.append((cx, cy, s, s))
+                # s = sizes[i]
+                # boxes.append((cx, cy, s, s))
 
-                s = math.sqrt(sizes[i] * sizes[i+1])
-                boxes.append((cx, cy, s, s))
+                # s = math.sqrt(sizes[i] * sizes[i+1])
+                # boxes.append((cx, cy, s, s))
 
-                s = sizes[i]
-                for ar in aspect_ratios[i]:
-                    boxes.append((cx, cy, s * math.sqrt(ar), s / math.sqrt(ar)))
-                    boxes.append((cx, cy, s / math.sqrt(ar), s * math.sqrt(ar)))
+                # s = sizes[i]
+                # for ar in aspect_ratios[i]:
+                #     boxes.append((cx, cy, s * math.sqrt(ar), s / math.sqrt(ar)))
+                #     boxes.append((cx, cy, s / math.sqrt(ar), s * math.sqrt(ar)))
+
+                if i<4:
+                    s = sizes_ssd[i]
+                    boxes.append((cx, cy, s, s))
+
+                    s = math.sqrt(sizes_ssd[i] * sizes_ssd[i+1])
+                    boxes.append((cx, cy, s, s))
+
+                    s = sizes_ssd[i]
+                    for ar in aspect_ratios[i]:
+                        boxes.append((cx, cy, s * math.sqrt(ar), s / math.sqrt(ar)))
+                        boxes.append((cx, cy, s / math.sqrt(ar), s * math.sqrt(ar)))
+
+                else:            
+                    s = sizes_fusion[i-4]
+                    boxes.append((cx, cy, s, s))
+
+                    s = math.sqrt(sizes_fusion[i-4] * sizes_fusion[i-4+1])
+                    boxes.append((cx, cy, s, s))
+
+                    s = sizes_fusion[i-4]
+                    for ar in aspect_ratios[i]:
+                        boxes.append((cx, cy, s * math.sqrt(ar), s / math.sqrt(ar)))
+                        boxes.append((cx, cy, s / math.sqrt(ar), s * math.sqrt(ar)))
 
         self.default_boxes = torch.Tensor(boxes)
 
@@ -132,13 +160,17 @@ class DataEncoder:
 
         areas = (x2-x1) * (y2-y1)
         _, order = scores.sort(0, descending=True)
+        order = order.numpy()
 
         keep = []
-        while order.numel() > 0: 
-            i = order[0]
+        while order.size > 0: 
+            try:
+                i = order[0]
+            except:
+                i = order
             keep.append(i)
 
-            if order.numel() == 1:
+            if order.size == 1:
                 break
 
             xx1 = x1[order[1:]].clamp(min=x1[i])
@@ -158,7 +190,7 @@ class DataEncoder:
                 raise TypeError('Unknown nms mode: %s.' % mode)
 
             ids = (ovr<=threshold).nonzero().squeeze()
-            if ids.numel() == 0:
+            if ids.size == 0:
                 break
             order = order[ids+1]
         return torch.LongTensor(keep)
