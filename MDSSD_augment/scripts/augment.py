@@ -8,15 +8,6 @@ import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import random
 
-def getfilename(path,mode):
-	if mode == None:
-		filename = os.listdir(path)
-	if mode != None:
-		extension = mode
-		os.chdir(path)
-		filename= [j for j in glob.glob('*.{}'.format(extension))]
-	return filename
-
 IMG_DIR = '../../../../VisDrone2019/dataset/VisDrone2018-DET-train/images/'
 ANNOT_DIR = '../../../../VisDrone2019/dataset/VisDrone2018-DET-train/annotations/'
 

@@ -18,8 +18,13 @@ from mdssd import MDSSD300
 from datagen import ListDataset
 from multibox_loss import MultiBoxLoss
 
+TRAIN_IMG_DIR = '../../../../VisDrone2019/dataset/VisDrone2018-DET-train/images/'
+TRAIN_ANNOT_DIR = '../../../../VisDrone2019/dataset/VisDrone2018-DET-train/annotations/'
+VAL_IMAGE_DIR = '../../../../VisDrone2019/dataset/VisDrone2019-DET-val/images/'
+VAL_ANNOT_DIR = '../../../../VisDrone2019/dataset/VisDrone2019-DET-val/annotations/'
+
 lr = 0.001
-resume = False  # Resume from checkpoint
+resume = True  # Resume from checkpoint
 epoch = 200
 batch_size = 8
 
@@ -32,11 +37,10 @@ print('==> Preparing data..')
 transform = transforms.Compose([transforms.ToTensor(),
                             transforms.Normalize(mean=(0.356, 0.368, 0.362), std=(0.242, 0.235, 0.236))])
 
-# trainset = ListDataset(root='/home/siddhant/deeplearning/codes/UBC_internship/CANSCAN/Seal_Detection/dataset/files/images/', list_file='/home/siddhant/deeplearning/codes/UBC_internship/CANSCAN/Seal_Detection/dataset/files/annotations/', train=True, transform=transform)
-trainset = ListDataset(root='../../../../VisDrone2019/dataset/VisDrone2018-DET-train/images/', list_file='../../../../VisDrone2019/dataset/VisDrone2018-DET-train/annotations/', train=True, transform=transform)
+trainset = ListDataset(root=TRAIN_IMG_DIR, list_file=TRAIN_ANNOT_DIR, train=True, transform=transform)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=8, shuffle=True, num_workers=4)
 
-valset = ListDataset(root='../../../../VisDrone2019/dataset/VisDrone2019-DET-val/images/', list_file='../../../../VisDrone2019/dataset/VisDrone2019-DET-val/annotations/', train=True, transform=transform)
+valset = ListDataset(root=VAL_IMAGE_DIR, list_file=VAL_ANNOT_DIR, train=True, transform=transform)
 valloader = torch.utils.data.DataLoader(valset, batch_size=8, shuffle=True, num_workers=4)
 
 # Model
@@ -95,18 +99,11 @@ def train(epoch,prev_val_loss, last_saved):
         loss.backward()
         optimizer.step()
         # scheduler.step()
-        # print(loc_preds.size(), loc_targets.size())
+
         train_loss += loss.item()
-        # if batch_idx%100 == 0:
-        #     os.makedirs('checkpoint', exist_ok=True)
-        #     torch.save({
-        #         'epoch': epoch,
-        #         'net': net.module.state_dict(), 
-        #         'loss': loss,
-        #     }, 'checkpoint/ckpt.pth')
+
         if batch_idx%100 == 0:
             val_loss_tot = 0
-            # batch_idx_val = 0
             for batch_idx_val, (images, loc_targets, conf_targets) in enumerate(valloader):
                 if use_cuda:
                     images = images.cuda()
@@ -132,7 +129,7 @@ def train(epoch,prev_val_loss, last_saved):
                 print("Saved.")
                 prev_val_loss = val_loss_tot
                 last_saved = [epoch, batch_idx]
-        # print('epoch: {}, batch_idx: {},loss: {}, train_loss: {}'.format(epoch, batch_idx, loss.item(), train_loss/(batch_idx+1)))
+
         print('epoch: {}, batch_idx: {},loss: {}, train_loss: {}, best_val_loss: {}, last_saved: {}'.format(epoch, batch_idx, loss.item(), train_loss/(batch_idx+1), prev_val_loss, last_saved))
 
     return prev_val_loss, last_saved

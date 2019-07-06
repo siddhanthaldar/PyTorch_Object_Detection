@@ -26,15 +26,6 @@ import glob
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
-def getfilename(path,mode):
-    if mode == None:
-        filename = os.listdir(path)
-    if mode != None:
-        extension = mode
-        os.chdir(path)
-        filename= [j for j in glob.glob('*.{}'.format(extension))]
-    return filename
-
 class ListDataset(data.Dataset):
     img_size = 300
 
@@ -56,34 +47,6 @@ class ListDataset(data.Dataset):
 
         self.data_encoder = DataEncoder()
         self.num_samples = 0
-
-        # CANSCAN Seal Detection data
-
-        # for i in os.listdir(list_file):
-        #     self.num_samples += 1
-        #     self.fnames.append(i)
-        #     box = []
-        #     labels = []
-        #     tree = ET.parse(os.path.join(list_file,i))
-        #     obj = tree.findall('object')
-        #     filetype = obj[0].find('name').text
-        #     for i in range(len(obj)):
-        #         b = obj[i].findall('bndbox')
-        #         box.append([int(b[0].find('xmin').text), int(b[0].find('ymin').text), int(b[0].find('xmax').text), int(b[0].find('ymax').text)])  
-        #         labels.append(1)
-
-        #     # for j in range(num_objs):
-        #     #     f[j] = f[j].split(",")
-        #     #     xmin = float(f[j][0])
-        #     #     ymin = float(f[j][1])
-        #     #     w = float(f[j][2])
-        #     #     h = float(f[j][3])
-
-        #     #     box.append([xmin,ymin,xmin+h,ymin+h])
-        #     #     labels.append(int(f[j][5]))
-            
-        #     self.boxes.append(torch.Tensor(box))
-        #     self.labels.append(torch.LongTensor(labels))
 
         # VisDrone
 

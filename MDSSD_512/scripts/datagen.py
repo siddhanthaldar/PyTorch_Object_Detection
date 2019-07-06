@@ -27,7 +27,7 @@ import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
 class ListDataset(data.Dataset):
-    img_size = 300
+    img_size = 512
 
     def __init__(self, root, list_file, train, transform):
         '''
@@ -38,7 +38,6 @@ class ListDataset(data.Dataset):
           transform: ([transforms]) image transforms.
         '''
         self.root = root
-        self.list_file = list_file
         self.train = train
         self.transform = transform
 
@@ -49,9 +48,31 @@ class ListDataset(data.Dataset):
         self.data_encoder = DataEncoder()
         self.num_samples = 0
 
+        # VisDrone
+
         for i in os.listdir(list_file):
             self.num_samples += 1
-            self.fnames.append(i)        
+            self.fnames.append(i)
+            box = []
+            labels = []
+            with open(os.path.join(list_file,i)) as f:
+                f = f.read().split("\n")
+                f = f[:-1]
+            num_objs = len(f)
+
+            for j in range(num_objs):
+                f[j] = f[j].split(",")
+                xmin = float(f[j][0])
+                ymin = float(f[j][1])
+                w = float(f[j][2])
+                h = float(f[j][3])
+
+                box.append([xmin,ymin,xmin+w,ymin+h])
+                labels.append(int(f[j][5]))
+        
+            self.boxes.append(torch.Tensor(box))
+            self.labels.append(torch.LongTensor(labels))
+       
 
     def __getitem__(self, idx):
         '''Load a image, and encode its bbox locations and class labels.
@@ -65,52 +86,8 @@ class ListDataset(data.Dataset):
         # Load image and bbox locations.
         fname = self.fnames[idx]
         img = cv2.imread(os.path.join(self.root, fname[:-4]+".jpg"))
-
-        box = []
-        label = []
-        with open(os.path.join(self.list_file,fname)) as f:
-            f = f.read().split("\n")
-            f = f[:-1]
-        num_objs = len(f)
-
-        for j in range(num_objs):
-            f[j] = f[j].split(",")
-            xmin = float(f[j][0])
-            ymin = float(f[j][1])
-            w = float(f[j][2])
-            h = float(f[j][3])
-
-            box.append([xmin,ymin,xmin+w,ymin+h])
-            label.append(int(f[j][5]))
-
-        # **************************** AUGMENTATION ************************************
-        # Copy and paste small objects at random locations in
-        # image to increase the number of samples with small sizes.
-        box_new = box.copy()
-        label_new = label.copy()
-        img_new = img.copy()
-        for n in range(len(box)):
-            j = box[n]   
-            if j[2]*j[3]<500:
-                crop = img[int(j[1]):int(j[1]+j[3]),int(j[0]):int(j[0]+j[2])]
-                x = random.randrange(0, img.shape[1],1)
-                y = random.randrange(0, img.shape[0],1)
-
-                try:
-                    img_new[int(y):int(y+j[3]),int(x):int(x+j[2])] = crop
-                    box_new.append([x,y,j[2],j[3]])
-                    label_new.append(label[n])
-                except:
-                    continue
-
-        # ********************************************************************************
-
-        self.boxes.append(torch.Tensor(box_new))
-        self.labels.append(torch.LongTensor(label_new))
-        img = img_new
-        
-        boxes = self.boxes[-1].clone()
-        labels = self.labels[-1]
+        boxes = self.boxes[idx].clone()
+        labels = self.labels[idx]
 
         # Data augmentation while training.
         if self.train:

@@ -8,13 +8,10 @@ class DataEncoder:
     def __init__(self):
         '''Compute default box sizes with scale and aspect transform.'''
         scale = 300.
-        # steps = [s / scale for s in (8, 16, 32, 64, 100, 300)]
         steps = [s / scale for s in (32, 64, 100, 300, 4, 8, 16)]
-        # sizes = [s / scale for s in (30, 60, 111, 162, 213, 264, 315)]
         sizes_ssd = [s / scale for s in (111, 162, 213, 264, 315)]
         sizes_fusion = [s / scale for s in (15, 30, 60, 111)]
         aspect_ratios = ((2,3), (2,3), (2,), (2,), (2,), (2,), (2,))
-        # feature_map_sizes = (38, 19, 10, 5, 3, 1)
         feature_map_sizes = (10, 5, 3, 1, 75, 38, 19)
         num_layers = len(feature_map_sizes)
 
@@ -24,17 +21,6 @@ class DataEncoder:
             for h,w in itertools.product(range(fmsize), repeat=2):
                 cx = (w + 0.5)*steps[i]
                 cy = (h + 0.5)*steps[i]
-
-                # s = sizes[i]
-                # boxes.append((cx, cy, s, s))
-
-                # s = math.sqrt(sizes[i] * sizes[i+1])
-                # boxes.append((cx, cy, s, s))
-
-                # s = sizes[i]
-                # for ar in aspect_ratios[i]:
-                #     boxes.append((cx, cy, s * math.sqrt(ar), s / math.sqrt(ar)))
-                #     boxes.append((cx, cy, s / math.sqrt(ar), s * math.sqrt(ar)))
 
                 if i<4:
                     s = sizes_ssd[i]

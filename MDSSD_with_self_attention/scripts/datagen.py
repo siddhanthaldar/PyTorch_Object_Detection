@@ -49,6 +49,8 @@ class ListDataset(data.Dataset):
         self.data_encoder = DataEncoder()
         self.num_samples = 0
 
+        # VisDrone
+
         for i in os.listdir(list_file):
             self.num_samples += 1
             self.fnames.append(i)        
