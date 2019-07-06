@@ -74,7 +74,7 @@ if use_cuda:
 optimizer = optim.SGD(net.parameters(), lr=lr, momentum=0.9, weight_decay=1e-4)
 
 # Training
-def train(epoch, prev_val_loss):
+def train(epoch, prev_val_loss, last_saved):
 	print('\nEpoch: %d' % epoch)
 	net.train()
 	train_loss = 0
@@ -98,7 +98,6 @@ def train(epoch, prev_val_loss):
 		train_loss += loss.item()
 		if batch_idx%100 == 0:
 			val_loss_tot = 0
-			# batch_idx_val = 0
 			for batch_idx_val, (images, loc_targets, conf_targets) in enumerate(valloader):
 				if use_cuda:
 					images = images.cuda()
@@ -123,11 +122,13 @@ def train(epoch, prev_val_loss):
 				}, 'checkpoint/ckpt.pth')
 				print("Saved.")
 				prev_val_loss = val_loss_tot
-		print('epoch: {}, batch_idx: {},loss: {}, train_loss: {}, best_val_loss: {}'.format(epoch, batch_idx, loss.item(), train_loss/(batch_idx+1), prev_val_loss))
+				last_saved = [epoch, batch_idx]
+		print('epoch: {}, batch_idx: {},loss: {}, train_loss: {}, best_val_loss: {}, last_saved: {}'.format(epoch, batch_idx, loss.item(), train_loss/(batch_idx+1), prev_val_loss, last_saved))
 
-	return prev_val_loss
+	return prev_val_loss, last_saved
 
 prev_val_loss = 999
+last_saved = [start_epoch,0]
 for epoch_num in range(start_epoch, start_epoch+epoch):
-	prev_val_loss = train(epoch_num, prev_val_loss)
+	prev_val_loss, last_saved = train(epoch_num, prev_val_loss, last_saved)
 	

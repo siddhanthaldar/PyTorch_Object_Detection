@@ -71,7 +71,7 @@ class MultiBoxLoss(nn.Module):
         pos = conf_targets > 0  # [N,8732], pos means the box matched.
         num_matched_boxes = pos.data.float().sum()
         if num_matched_boxes == 0:
-            return torch.tensor([0], requires_grad=True)
+            return torch.tensor([0.], requires_grad=True)
 
         ################################################################
         # loc_loss = SmoothL1Loss(pos_loc_preds, pos_loc_targets)

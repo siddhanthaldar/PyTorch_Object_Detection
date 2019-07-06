@@ -11,36 +11,42 @@ class CFE(nn.Module):
 
 		# First branch
 		self.conv1_1 = nn.Conv2d(channels, channels//2, kernel_size=1, padding=0)
+		self.bn1 = nn.BatchNorm2d(channels//2)
 		self.conv1_2 = nn.Conv2d(channels//2,channels//2, kernel_size=(k,1), padding=(k//2,0),groups=8)
 		self.conv1_3 = nn.Conv2d(channels//2, channels//2, kernel_size=(1,k), padding=(0,k//2),groups=8)
+		self.bn2 = nn.BatchNorm2d(channels//2)
 		self.conv1_4 = nn.Conv2d(channels//2, channels//2, kernel_size=1, padding=0)
+		self.bn3 = nn.BatchNorm2d(channels//2)
 
 		# Second branch
 		self.conv2_1 = nn.Conv2d(channels, channels//2, kernel_size=1, padding=0)
+		self.bn4 = nn.BatchNorm2d(channels//2)
 		self.conv2_2 = nn.Conv2d(channels//2,channels//2, kernel_size=(1,k), padding=(0,k//2),groups=8)
 		self.conv2_3 = nn.Conv2d(channels//2, channels//2, kernel_size=(k,1), padding=(k//2,0),groups=8)
+		self.bn5 = nn.BatchNorm2d(channels//2)
 		self.conv2_4 = nn.Conv2d(channels//2, channels//2, kernel_size=1, padding=0)
+		self.bn6 = nn.BatchNorm2d(channels//2)
 
 	def forward(self, x):
 
 		# First branch
-		f = self.conv1_1(x)
+		f = self.bn1(F.relu(self.conv1_1(x)))
 		# print(f.size())
 		f = self.conv1_2(f)
 		# print(f.size())
-		f = self.conv1_3(f)
+		f = self.bn2(F.relu(self.conv1_3(f)))
 		# print(f.size())
-		f = self.conv1_4(f)
+		f = self.bn3(F.relu(self.conv1_4(f)))
 		# print(f.size())
 		
 		# Second branch
-		s = self.conv2_1(x)
+		s = self.bn4(F.relu(self.conv2_1(x)))
 		# print(s.size())
 		s = self.conv2_2(s)
 		# print(s.size())
-		s = self.conv2_3(s)
+		s = self.bn5(F.relu(self.conv2_3(s)))
 		# print(s.size())
-		s = self.conv2_4(s)
+		s = self.bn6(F.relu(self.conv2_4(s)))
 		# print(s.size())
 		
 		fs = torch.cat((f,s), 1)
@@ -53,14 +59,16 @@ class FFB(nn.Module):
 		super(FFB, self).__init__()
 
 		self.conv1 = nn.Conv2d(c1, c1, kernel_size=1, padding=0)
+		self.bn1 = nn.BatchNorm2d(c1)
 		self.conv2 = nn.Conv2d(c2, c1, kernel_size=1, padding=0)
+		self.bn2 = nn.BatchNorm2d(c1)
 		self.deconv1 = nn.ConvTranspose2d(c1,c1, kernel_size=3, stride=2, padding=(1,1))
 
 	def forward(self, x1, x2):
 
-		f = self.conv1(x1)
+		f = self.bn1(F.relu(self.conv1(x1)))
 		# print(f.size())
-		s = self.conv2(x2)
+		s = self.bn2(F.relu(self.conv2(x2)))
 		# print(s.size())
 		# s = F.upsample(s, scale_factor = 2)
 		s = self.deconv1(s)

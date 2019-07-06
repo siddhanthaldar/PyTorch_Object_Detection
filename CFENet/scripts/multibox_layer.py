@@ -10,7 +10,6 @@ import torch.nn.functional as F
 
 class MultiBoxLayer(nn.Module):
     num_classes = 13
-    # num_anchors = [4,6,6,6,4,4]
     num_anchors = [6,6,4,4,4,6]
     in_planes = [512,256,256,256,512,512]
 
