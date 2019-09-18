@@ -1,4 +1,5 @@
 # Object_Detection_Models
+This repository contains Pytorch implementations of single-shot approaches for object detection in images.
 
 ## Papers
 - [SSD: Single Shot MultiBox Detector](https://www.cs.unc.edu/~wliu/papers/ssd.pdf)
