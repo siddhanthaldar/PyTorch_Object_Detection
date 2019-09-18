@@ -1,4 +1,4 @@
-# Object_Detection_Models
+# PyTorch_Object_Detection
 This repository contains Pytorch implementations of single-shot approaches for object detection in images.
 
 ## Papers
